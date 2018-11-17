@@ -6,7 +6,7 @@ import yaml
 from model.utils.config import cfg
 from .generate_anchors import generate_anchors
 from .bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
-from model.nms.nms_wrapper import nms
+from model.nms.nms_wrapper import soft_nms
 
 import pdb
 """
@@ -131,11 +131,11 @@ class _ProposalLayer(nn.Module):
             proposals_single = proposals_single[order_single, :]
             scores_single = scores_single[order_single].view(-1, 1)
 
-            # 6. apply nms (e.g. threshold = 0.7)
+            # 6. apply nms (soft_nms)
             # 7. take post_nms_topN (e.g. 300)
             # 8. return the top proposals (-> RoIs top)
 
-            keep_idx_i = nms(torch.cat((proposals_single, scores_single), 1), nms_thresh, force_cpu=not cfg.USE_GPU_NMS)
+            keep_idx_i = soft_nms(torch.cat((proposals_single, scores_single), 1))
             keep_idx_i = keep_idx_i.long().view(-1)
 
             if post_nms_topN > 0:
